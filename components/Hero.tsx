@@ -1,214 +1,87 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { personal } from "@/lib/data";
 
-const Scene = dynamic(() => import("./Scene"), { ssr: false });
+const KineticCore = dynamic(() => import("./KineticCore"), {
+  ssr: false,
+  loading: () => <div className="w-full h-full bg-black/20 animate-pulse" />
+});
 
-const ROLES = [
-  "IT Specialist",
-  "Web Developer",
-  "UI/UX Designer",
-  "Data Analyst",
-  "Problem Solver",
-];
-
-function TypeWriter({ texts }: { texts: string[] }) {
-  const [index, setIndex] = useState(0);
-  const [displayed, setDisplayed] = useState("");
-  const [deleting, setDeleting] = useState(false);
-
-  useEffect(() => {
-    const current = texts[index % texts.length];
-    if (!deleting && displayed.length < current.length) {
-      const t = setTimeout(() => setDisplayed(current.slice(0, displayed.length + 1)), 80);
-      return () => clearTimeout(t);
-    }
-    if (!deleting && displayed.length === current.length) {
-      const t = setTimeout(() => setDeleting(true), 1800);
-      return () => clearTimeout(t);
-    }
-    if (deleting && displayed.length > 0) {
-      const t = setTimeout(() => setDisplayed(displayed.slice(0, -1)), 40);
-      return () => clearTimeout(t);
-    }
-    if (deleting && displayed.length === 0) {
-      setDeleting(false);
-      setIndex((i) => i + 1);
-    }
-  }, [displayed, deleting, index, texts]);
-
-  return (
-    <span className="text-cyan-400">
-      {displayed}
-      <span className="animate-pulse">|</span>
-    </span>
-  );
-}
-
-const letterVariants = {
-  hidden: { opacity: 0, y: 40 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.07, duration: 0.5, ease: [0.4, 0, 0.2, 1] as const },
-  }),
-};
+const AmbientTexture = dynamic(() => import("./AmbientTexture"), {
+  ssr: false
+});
 
 export default function Hero() {
-  const firstName = "Moses";
-  const lastName = "Oni";
-
-  const [isDark, setIsDark] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsDark(document.documentElement.classList.contains("dark"));
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains("dark"));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
+    setIsMounted(true);
   }, []);
 
-  const scrollToIntro = () => {
-    document.getElementById("intro")?.scrollIntoView({ behavior: "smooth" });
-  };
+  if (!isMounted) return <section id="hero" className="h-screen w-full bg-black" />;
 
   return (
-    <section id="hero" className="relative h-screen w-full overflow-hidden bg-bg">
-      <Scene isDark={isDark} />
+    <section id="hero" className="relative h-screen w-full overflow-hidden bg-black p-4 sm:p-6 md:p-8 flex flex-col">
+      <div className="grid grid-cols-1 md:grid-cols-12 grid-rows-6 md:grid-rows-4 gap-4 h-full w-full">
 
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-bg pointer-events-none z-10" />
+        {/* Cell 1: Identity */}
+        <div className="md:col-span-8 md:row-span-2 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 flex flex-col justify-end overflow-hidden group">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <p className="text-[#4E9BA6] font-mono tracking-widest mb-4 text-sm uppercase">Creative Lead / Developer</p>
+            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white leading-tight tracking-tighter">
+              MOSES<br />
+              OLUWADAMILARE<br />
+              ONI
+            </h1>
+          </motion.div>
+        </div>
 
-      {/* Content */}
-      <div className="relative z-20 flex h-full flex-col items-center justify-center text-center px-6">
-        <motion.p
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-4 text-xs uppercase tracking-[0.4em] text-cyan-400/70 font-mono"
-        >
-          {personal.location}
-        </motion.p>
-
-        {/* Name */}
-        <div className="flex flex-wrap justify-center gap-x-5 mb-4">
-          <div className="flex">
-            {firstName.split("").map((char, i) => (
-              <motion.span
-                key={i}
-                custom={i}
-                variants={letterVariants}
-                initial="hidden"
-                animate="visible"
-                className="text-5xl sm:text-7xl md:text-8xl font-black text-fg tracking-tight"
-              >
-                {char}
-              </motion.span>
-            ))}
-          </div>
-          <div className="flex">
-            {lastName.split("").map((char, i) => (
-              <motion.span
-                key={i}
-                custom={i + firstName.length + 1}
-                variants={letterVariants}
-                initial="hidden"
-                animate="visible"
-                className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight"
-                style={{ color: "var(--accent)" }}
-              >
-                {char}
-              </motion.span>
-            ))}
+        {/* Cell 2: Kinetic Core */}
+        <div className="md:col-span-4 md:row-span-3 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl relative overflow-hidden">
+          <Suspense fallback={<div className="w-full h-full bg-black/20 animate-pulse" />}>
+            <KineticCore />
+          </Suspense>
+          <div className="absolute bottom-6 left-6 z-10">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#4E9BA6] animate-pulse" />
+              <span className="text-xs font-mono text-white/50 uppercase tracking-tighter">Interactive 3D Workspace</span>
+            </div>
           </div>
         </div>
 
-        {/* Typewriter role */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-          className="mb-8 text-lg sm:text-2xl font-light text-fg/80"
-        >
-          <TypeWriter texts={ROLES} />
-        </motion.div>
+        {/* Cell 3: Ambient Texture */}
+        <div className="md:col-span-5 md:row-span-2 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl relative overflow-hidden">
+          <Suspense fallback={null}>
+            <AmbientTexture />
+          </Suspense>
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-8">
+            <p className="text-white/20 text-sm font-mono text-center leading-relaxed">
+              Synthesizing complex data into elegant digital interfaces.
+            </p>
+          </div>
+        </div>
 
-        {/* CTA buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.5 }}
-          className="flex flex-col sm:flex-row gap-4 items-center"
-        >
-          <a
-            href={`mailto:${personal.email}`}
-            className="group relative px-8 py-3 rounded-full font-semibold text-sm uppercase tracking-widest overflow-hidden border border-cyan-400/50 text-fg transition-all duration-300 hover:border-cyan-400"
-          >
-            <span className="absolute inset-0 bg-accent/10 -translate-x-full group-hover:translate-x-0 transition-transform duration-300" />
-            <span className="relative">Hire Me</span>
-          </a>
-          <Link
-            href="/about"
-            className="px-8 py-3 rounded-full font-semibold text-sm uppercase tracking-widest bg-accent text-bg hover:opacity-90 transition-opacity"
-          >
-            View Work
-          </Link>
-        </motion.div>
+        {/* Additional Info Cell (optional but helps Bento balance) */}
+        <div className="md:col-span-3 md:row-span-1 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 flex items-center justify-between group hover:border-[#4E9BA6]/50 transition-colors">
+          <div>
+             <p className="text-white/40 text-xs font-mono uppercase">Location</p>
+             <p className="text-white text-sm">{personal.location}</p>
+          </div>
+          <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-[#4E9BA6] transition-colors">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white group-hover:text-black transition-colors">
+              <path d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
+            </svg>
+          </div>
+        </div>
 
-        {/* Social links */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.8 }}
-          className="mt-10 flex gap-6"
-        >
-          <a
-            href={personal.linkedin}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-fg/40 hover:text-cyan-400 transition-colors text-xs font-mono uppercase tracking-widest"
-          >
-            LinkedIn
-          </a>
-          <span className="text-fg/20">·</span>
-          <a
-            href={personal.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-fg/40 hover:text-cyan-400 transition-colors text-xs font-mono uppercase tracking-widest"
-          >
-            GitHub
-          </a>
-          <span className="text-fg/20">·</span>
-          <a
-            href={`mailto:${personal.email}`}
-            className="text-fg/40 hover:text-cyan-400 transition-colors text-xs font-mono uppercase tracking-widest"
-          >
-            Email
-          </a>
-        </motion.div>
       </div>
-
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2.2 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 cursor-pointer"
-        onClick={scrollToIntro}
-      >
-        <span className="text-fg/30 text-xs font-mono tracking-widest uppercase">Scroll</span>
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-          className="w-px h-10 bg-linear-to-b from-cyan-400/50 to-transparent"
-        />
-      </motion.div>
     </section>
   );
 }
